@@ -1,4 +1,4 @@
-# 非同期処理というものが必要な理由
+# 「非同期処理」が重要なのはなぜか
 
 Apache Http Serverは接続ごとにプロセスを生成するような仕組みです。このため、接続してくるクライアントがものすごく多くなると、メモリ領域を圧迫したり、レスポンス性能が壊滅的に低くなります。
 
@@ -16,7 +16,7 @@ Node.jsでは、多数の処理要求をシングルスレッドで（少ない�
 
 以上が、非同期処理というものが必要な理由です。
 
-# async awaitやPromiseが必要な理由
+# async awaitが必要な理由は何か
 
 非同期処理をうまく使うことで他の処理にバトンを渡す、という大前提の方針のなかで私たちはコードを書いていくことになります。
 
@@ -26,13 +26,96 @@ Node.jsでは、多数の処理要求をシングルスレッドで（少ない�
 
 ここで必要なのは、「他の処理にバトンを渡しながらも、自分のコードでは次に進まずに止まる」ということです。
 
-これを実現するのがPromiseや、Promiseを使いやすくしたasync awaitです。
+これを実現するのがasync awaitです。
 
-Promiseやasync awaitについては、[「JavaScript Promiseの本」](https://azu.github.io/promises-book/)で学びましょう。
+async await（及びその前段のPromise）については、[「JavaScript Promiseの本」](https://azu.github.io/promises-book/)で学びましょう。
 
-私がPromiseやasync awaitを知った時は、「非同期処理を活用すべき環境のなかで、無理やり同期処理を実現していて、何が嬉しいのか分からないな・・」と感じたものです。これは、Promiseやasync awaitで待っている間、他の処理もブロックされている、という誤解から生じた考えでした。
+私がasync awaitを知った時は、「非同期処理を活用すべき環境のなかで、無理やり同期処理を実現していて、何が嬉しいのか分からないな・・」と感じたものです。これは、awaitで待っている間、他の処理もブロックされている、という誤解から生じた考えでした。
 
-Node.jsのノンブロッキングIOという環境の中で、他の処理にバトンを渡しつつも、自分のコードの処理では次に進まずに、重い処理が終わるまでジッと待つ。このような器用なことを実現するために、Promiseやasync awaitがあるわけです。
+Node.jsのノンブロッキングIOという環境の中で、他の処理にバトンを渡しつつも、自分のコードの処理では次に進まずに、重い処理が終わるまでジッと待つ。このような器用なことを実現するために、async awaitがあるわけです。
+
+こういった大枠を頭の片隅に置いて、以下の説明をご覧いただければと思います。
+
+# Promiseだけだと なぜ困るのか
+
+async awaitはPromiseを使いやすくするためのものですが、Promiseそのものは非同期処理の状態を管理する役目しかありません。
+
+Promiseにthen()でコールバックを設定したら、さっさと処理は先に進んでしまいます。  
+まさにノンブロッキングIO的な動きです。
+
+例えば、以下のようにAWS SDKでPromiseを使う場合を考えてみましょう。
+
+```javascript
+s3.putObject(params).promise()
+  .then(data => {
+    console.log(data)
+    console.log("putObjcet successfully.")
+})
+
+console.log("end.")
+
+// 実行結果は以下のとおりです。
+//   end.
+//   (dataの中身が出力されます)
+//   putObjcet successfully.
+```
+
+s3.putObject(params).promise()で返却されたPromiseでresolve()が呼ばれた後、thenの中身が実行される、という順序関係だけが保証されます。
+
+thenメソッドでやっていることは、あくまでもコールバックの登録であり、コールバックそのものを実行しているわけでは無いのです。
+
+ですので、このままだと  
+`console.log("putObjcet successfully.")`の後に  
+`console.log("end.")`が呼ばれる、ということは保証されません。
+
+そういった順序関係を保証したいのであれば、以下のようにすべきです。
+
+```javascript
+s3.putObject(params).promise()
+  .then(data => {
+    console.log(data)
+    console.log("putObjcet successfully.")
+}).then(() => {
+    console.log("end.")
+})
+
+// 実行結果は以下のとおりです。
+//   (dataの中身が出力されます)
+//   putObjcet successfully.
+//   end.
+```
+
+ですが、これだと読みづらいのです。  
+やりたいことは単純なのに、何だか込み入ったことをやっているような感じになってしまいます。
+
+そこでasync awaitの出番です。
+
+# async awaitを使うと どうなるか
+
+async awaitを使うと、以下のようになります。  
+なお、以下のコードはasync関数の中に実装されていると思ってください。
+
+```javascript
+const data = await s3.putObject(params).promise()
+
+console.log(data)
+console.log("putObjcet successfully.")
+console.log("end.")
+
+// 実行結果は以下のとおりです。
+//   (dataの中身が出力されます)
+//   putObjcet successfully.
+//   end.
+```
+
+このように、putObjectの実行結果を待ち、次に進んでいます。  
+やりたいことは単純であり、コードもそれと同じくらい単純で読みやすいはずです。
+
+「こんなの、Javaとかではasyncとかawait等と書かなくても、普通にできることでは？」と思うかもしれません。
+
+ですが前述の通り、Node.jsの世界では「非同期処理をうまく使うことで他の処理にバトンを渡す」という大前提の方針のなかで、私たちはコードを書くのです。Javaではできない「シングルスレッドによって大量の処理を捌く」という恩恵を得ながら、その中でJavaのような直感的なコーディングをできるようにするためのテクニックが、async awaitなのです。
+
+そういった位置付けを把握すると、（私のような）モヤモヤは失くなるのではと思います。
 
 # AWS LambdaでのNode.js
 AWS Lambdaでは言語としてJavaScript（Node.js）を選ぶことができます。
@@ -41,6 +124,6 @@ Lambdaは当然ながら基本的には１つの処理要求を受けて、単�
 
 クライアントが１つしかいないような状況ですから、純粋に自分の処理が同期的に進むようにコードを書けば良いでしょう。
 
-DBアクセスのような時間のかかるIO処理を呼び出すときには、誰にバトンを渡すわけでもないですが、Promiseやasync awaitを使って自分の処理が同期的に進むようにコードを書く、ということですね。
+DBアクセスのような時間のかかるIO処理を呼び出すときには、誰にバトンを渡すわけでもないですが、async awaitを使って自分の処理が同期的に進むようにコードを書く、ということですね。
 
 何というか、ちょっと無意味さを感じちゃいますね。
