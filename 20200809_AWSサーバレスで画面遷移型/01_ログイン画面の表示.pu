@@ -1,0 +1,34 @@
+@startuml　seq
+participant ユーザ as user
+participant ブラウザ as browser
+participant "API Gateway" as gateway
+participant Lambda as lambda
+participant "express\n(Lambda)" as express
+participant "express-session\n(Lambda)" as expressSession
+participant "connect-dynamodb\n(Lambda)" as connectDynamo
+participant セッション管理TBL as sessionsTbl
+participant CloudFront as front
+participant S3 as s3
+
+user -> browser
+browser -> gateway: ログイン画面表示リクエスト
+gateway -> lambda
+lambda -> express
+express -> expressSession: セッション情報の削除
+expressSession -> connectDynamo
+connectDynamo -> sessionsTbl
+sessionsTbl --> connectDynamo
+connectDynamo --> expressSession
+expressSession --> express
+express -> express: HTMLを生成（Express, pug）
+express --> lambda
+lambda --> gateway
+gateway --> browser: HTMLを返却
+browser -> front: 静的コンテンツ(CSS/JavaScript/画像)の取得リクエスト 
+front -> s3
+s3 --> front
+front --> browser: 静的コンテンツを返却
+browser -> browser: 画面描画
+browser --> user
+
+@enduml

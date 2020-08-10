@@ -1,0 +1,58 @@
+@startuml　seq
+participant ユーザ as user
+participant ブラウザ as browser
+participant "API Gateway" as gateway
+participant Lambda as lambda
+participant "express\n(Lambda)" as express
+participant "express-session\n(Lambda)" as expressSession
+participant "connect-dynamodb\n(Lambda)" as connectDynamo
+participant セッション管理TBL as sessionsTbl
+
+user -> browser: リンクやボタンを押下
+browser -> gateway: cookieでセッションIDを送信
+gateway -> lambda
+lambda -> express
+express -> expressSession: cookieのセッションIDから\nセッション情報を取得
+expressSession -> connectDynamo
+connectDynamo -> sessionsTbl
+sessionsTbl --> connectDynamo
+connectDynamo --> expressSession
+expressSession --> express
+note left
+req.sessionにユーザID、
+Cognitoグループなどが設定される。
+end note
+
+express -> express: 認証チェック
+note left
+req.sessionからユーザIDを取得。
+取得したユーザIDがundefinedならば未認証と見なす。
+end note
+
+opt 未認証の場合
+  express --> lambda: ログイン画面へのリダイレクトを指示 
+  lambda --> gateway
+  gateway --> browser
+end
+
+express -> express: 認可チェック
+note left
+req.sessionからユーザのグループを取得。
+req.originalUrlからアクセス対象のパスを取得し、
+そのグループがアクセスして良いパスか確認する。
+end note
+
+opt 認可エラーの場合
+  express --> lambda: エラー画面を返却
+  lambda --> gateway
+  gateway --> browser
+end
+
+express -> express: 業務処理
+express --> lambda: 次画面を返却
+lambda -> lambda
+lambda --> gateway
+gateway --> browser
+browser --> user
+
+@enduml

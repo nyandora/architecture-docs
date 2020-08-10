@@ -1,0 +1,41 @@
+@startuml　seq
+participant ユーザ as user
+participant ブラウザ as browser
+participant Cognito as cognito
+participant "API Gateway" as gateway
+participant Lambda as lambda
+participant "express\n(Lambda)" as express
+participant "express-session\n(Lambda)" as expressSession
+participant "connect-dynamodb\n(Lambda)" as connectDynamo
+participant セッション管理TBL as sessionsTbl
+
+user -> browser: ログインボタンを押下
+browser -> cognito: ID/パスワードを送信\n(JavaScript処理)
+cognito -> cognito: ユーザープールの\nID/パスワードと\n付き合わせる
+cognito --> browser: IDトークンを返却
+browser -> browser: form中のhiddenにIDトークンをセット\n(JavaScript処理)
+browser -> browser: 非表示のSubmitボタンを押下\n(JavaScript処理)
+browser -> gateway: ログインリクエスト
+gateway -> lambda
+lambda -> express
+express -> express: IDトークンの検証
+express -> express: IDトークンからユーザID/Cognitoグループ/\nCognitoカスタム属性を取得
+express -> expressSession: セッション情報を削除
+expressSession -> connectDynamo
+connectDynamo -> sessionsTbl
+sessionsTbl --> connectDynamo
+connectDynamo --> expressSession
+expressSession --> express
+express -> expressSession: ユーザID/Cognitoグループ/\nCognitoカスタム属性をセッションに保存
+expressSession -> connectDynamo
+connectDynamo -> sessionsTbl
+sessionsTbl --> connectDynamo
+connectDynamo --> expressSession
+expressSession --> express
+express -> express: HTMLを生成（Express, pug）。\nセッションIDをCookieで返却。
+express --> lambda
+lambda --> gateway
+gateway --> browser: HTML、Cookieを返却
+browser --> user
+
+@enduml
