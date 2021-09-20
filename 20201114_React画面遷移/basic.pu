@@ -1,0 +1,23 @@
+@startuml　seq
+participant ユーザ as user
+participant ブラウザ as browser
+participant spring as spring
+participant DB as db
+participant SSRエンジン as ssr
+participant Reactコード as react
+
+user -> browser
+browser -> spring
+spring -> db
+db --> spring: 商品名などのデータ
+spring -> ssr: 商品名などのデータ
+ssr -> react
+react -> react
+note right
+HTMLが生成される。
+end note
+react --> ssr
+ssr --> spring
+spring --> browser
+
+@enduml
