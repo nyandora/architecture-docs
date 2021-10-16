@@ -148,6 +148,13 @@
 
 例えばGUIは後者であり、プラグインであり、システムの本質ではない。コアなビジネスルールとは違い、状況によって移り変わるものなので、切り替えできるようにすべき。「IOは無関係」である。
 
+前者は上位のコンポーネントであり、後者は下位のコンポーネント。入出力が最も下位であり、入出力から離れているほど上位となる。
+
+最上位なのはビジネスルールであり、エンティティおよびユースケースである。
+
+![business-rule.svg](https://raw.githubusercontent.com/nyandora/universal-static-resources/main/box/business-rule.svg "business-rule.svg")
+
+ビジネスルールは、実装の詳細・方式には依存しない。
 
 
 
