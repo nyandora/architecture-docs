@@ -127,7 +127,7 @@
 ## アーキテクチャ設計とは何か（what）
 アーキテクチャ設計とは、変更の理由・頻度が異なるものを相互に分離し、それらの間の構造を定義すること。
 
-![architecure-separation-orientation](https://raw.githubusercontent.com/nyandora/universal-static-resources/main/box/architecure-separation-orientation.svg  "architecure-separation-orientation")
+![](https://github.com/nyandora/universal-static-resources/raw/main/box/architecure-separation-orientation.drawio.svg)
 
 先に挙げた各種の原則にのっとって、設計をしていくことになる。
 
@@ -154,7 +154,7 @@
 
 最上位なのはビジネスルールであり、エンティティおよびユースケースである。
 
-![business-rule.svg](https://raw.githubusercontent.com/nyandora/universal-static-resources/main/box/business-rule.svg "business-rule.svg")
+![](https://raw.githubusercontent.com/nyandora/universal-static-resources/main/box/business-rule.svg)
 
 ビジネスルールは、実装の詳細・方式には依存しない。例えば、WebなどのIO形態やFWには依存しない。
 
@@ -174,7 +174,7 @@
 
 分離したコンポーネントを物理的にどう分割するか（切り離し方式）については、選択・変更できるようにしておく。切り離し方式（マイクロサービス化するなど）そのものは、アーキテクチャではない。
 
-![how-to-separate-components.svg](https://raw.githubusercontent.com/nyandora/universal-static-resources/main/box/how-to-separate-components.svg "how-to-separate-components.svg")
+![](https://raw.githubusercontent.com/nyandora/universal-static-resources/main/box/how-to-separate-components.svg)
 
 最適な切り離し方式をギリギリまで吟味したり、運用しながら変更できることに価値がある。
 
