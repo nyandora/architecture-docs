@@ -168,6 +168,17 @@
 
 ![](https://github.com/nyandora/universal-static-resources/raw/main/box/clean-architecture-flow-and-dependency.drawio.svg)
 
+なお、Spring MVCなどの一般的なMVCフレームワークでは、制御の流れは上の図とは異なり、以下のようになるでしょう。それでも、「依存の方向を適切に」という本質は変わりません。
+
+```
+コントローラー
+→ ビジネスロジック
+→ コントローラー
+→ Presenter
+→ コントローラ
+→ View（Thymeleafなど）
+```
+
 ## アーキテクチャ設計におけるトピック
 
 ### 切り離し方式のバリエーション
