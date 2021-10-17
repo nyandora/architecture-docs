@@ -207,9 +207,19 @@
 
 分離したコンポーネントを物理的にどう分割するか（切り離し方式）については、選択・変更できるようにしておきましょう。切り離し方式（マイクロサービス化するなど）そのものは、アーキテクチャではありません。
 
-![](https://raw.githubusercontent.com/nyandora/universal-static-resources/main/box/how-to-separate-components.svg)
+![](https://github.com/nyandora/universal-static-resources/raw/main/box/how-to-separate-components.drawio.svg)
 
 最適な切り離し方式をギリギリまで吟味したり、運用しながら変更できることに価値があります。
+
+なお、書籍では「独立してコンパイル・デプロイ可能」といった表現がよく出てきます。
+
+これは以下の切り離し方式でのみ有効だと思います。
+
+* ローカルプロセスレベルの分離
+* サービスレベルの分離
+
+
+つまり、「独立してコンパイル・デプロイ可能か」というのはコンポーネントが適切に分割されているだけではなく、切り離し方式にも左右されるということです。
 
 ### テストしづらいコンポーネントの扱い方
 
