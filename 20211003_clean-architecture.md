@@ -90,7 +90,7 @@
 
 この原則を推し進めると、コンポーネントは大きくなる。
 
-### 再利用共通の原則　The Common Reuse Principle (CRP)　
+### 再利用性 共通の原則　The Common Reuse Principle (CRP)　
 
 ※「全再利用の原則」と訳されているが、これは不適切な訳。「The Common Reuse Principle」のどこにも「All」とは書いてない。
 
