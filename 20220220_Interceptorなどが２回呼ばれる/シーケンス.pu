@@ -1,0 +1,38 @@
+@startuml　seq
+participant ブラウザ as browser
+participant "Tomcat(AbstractProcessorLight等)" as tomcat
+participant DispatcherServlet as servlet
+participant Interceptor as interceptor
+participant RequestMappingHandlerAdapter as adapter
+participant ControllerAdvice as advice
+participant ReactiveTypeHandler as reactiveHandler
+participant WebAsyncManager as waManager
+participant DeferredResult as deferredResult
+participant HandlerMethodReturnValueHandler as hmrvHandler
+participant Controller as handler
+
+browser -> tomcat
+tomcat -> servlet
+servlet -> interceptor
+servlet -> adapter
+adapter -> advice
+adapter -> reactiveHandler
+reactiveHandler -> reactiveHandler: Publisherをsubscribe
+reactiveHandler -> handler: Contorllerのsuspend funを非同期で起動
+reactiveHandler -> waManager
+waManager -> deferredResult: 非同期処理終了時のコールバックを登録
+reactiveHandler --> adapter
+adapter --> servlet
+servlet --> tomcat: 非同期処理をキックしたので制御が戻る
+handler -> handler: 別スレッドがControllerのsuspend funを実行
+handler --> deferredResult: 非同期処理が完了したことを通知
+deferredResult --> tomcat: 続きを実行するよう指示
+tomcat -> servlet: 再度ディスパッチする
+servlet -> interceptor
+servlet -> adapter
+adapter -> advice
+adapter -> waManager: 非同期で実行したControllerの結果を取得
+adapter -> hmrvHandler
+hmrvHandler -> hmrvHandler: ブラウザにレスポンス
+
+@enduml
